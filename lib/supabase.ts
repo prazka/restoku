@@ -18,6 +18,7 @@ export type Product = {
 export type Order = {
   id: string
   customer_name: string
+  customer_phone: string
   customer_email: string
   customer_address: string
   items: OrderItem[]
