@@ -33,7 +33,7 @@ Kamu adalah AI yang mengekstrak informasi dari foto makanan/minuman.
 {
     "name": "...",
     "description": "...",
-    "price": 0,
+    "price": 0, Dalam bentuk angka saja, tanpa simbol Rp
     "image": "BASE64_INPUT"
 }
 
