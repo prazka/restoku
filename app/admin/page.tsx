@@ -13,6 +13,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { getImageSrc, createImagePreview } from '@/lib/image-utils'
 
 type ExtractedProduct = {
+  id: number
   name: string
   description: string
   price: number
@@ -28,6 +29,7 @@ export default function AdminPage() {
   const [showForm, setShowForm] = useState(false)
   const [imagePreview, setImagePreview] = useState<string>('')
   const [formData, setFormData] = useState({
+    id: 0,
     name: '',
     description: '',
     price: 0,
@@ -76,6 +78,7 @@ export default function AdminPage() {
       
       // Set form data with extracted information
       setFormData({
+        id: result.id || 0,
         name: result.name || '',
         description: result.description || '',
         price: result.price || 0,
@@ -96,6 +99,7 @@ export default function AdminPage() {
         const preview = await createImagePreview(file)
         setImagePreview(preview)
         setFormData({
+          id: 0,
           name: '',
           description: '',
           price: 0,
@@ -168,7 +172,7 @@ export default function AdminPage() {
       }
 
       // Reset form
-      setFormData({ name: '', description: '', price: 0, image_url: '' })
+      setFormData({ id: 0, name: '', description: '', price: 0, image_url: '' })
       setImagePreview('')
       setEditingProduct(null)
       setShowForm(false)
@@ -201,7 +205,8 @@ export default function AdminPage() {
 
   const startEdit = (product: Product) => {
     setEditingProduct(product)
-    setFormData({
+    setFormData({ 
+      id: product.id,
       name: product.name,
       description: product.description,
       price: product.price,
@@ -215,7 +220,7 @@ export default function AdminPage() {
     setShowForm(false)
     setEditingProduct(null)
     setImagePreview('')
-    setFormData({ name: '', description: '', price: 0, image_url: '' })
+    setFormData({ id: 0, name: '', description: '', price: 0, image_url: '' })
   }
 
   return (

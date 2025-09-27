@@ -225,7 +225,7 @@ export default function CheckoutPage() {
                     disabled={loading}
                     className="w-full bg-amber-500 hover:bg-amber-600 text-black font-semibold py-3 text-lg"
                   >
-                    {loading ? 'Processing Order...' : `Place Order - $${getTotalPrice().toFixed(2)}`}
+                    {loading ? 'Processing Order...' : `Place Order - Rp${getTotalPrice().toFixed(2)}`}
                   </Button>
 
                   <p className="text-gray-400 text-sm text-center">
