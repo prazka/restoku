@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Navigation } from '@/components/ui/navigation'
-import { Upload, Plus, Edit, Trash2, Image as ImageIcon, Wand2, Loader2 } from 'lucide-react'
+import { Upload, Plus, CreditCard as Edit, Trash2, Image as ImageIcon, Wand as Wand2, Loader as Loader2 } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { getImageSrc, createImagePreview } from '@/lib/image-utils'
 
