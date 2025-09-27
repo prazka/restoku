@@ -1,7 +1,7 @@
 "use client"
 
-import { Button } from './button'
-import { Card, CardContent } from './card'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 import { useCartStore } from '@/lib/store'
 import { getImageSrc } from '@/lib/image-utils'
 import { Product } from '@/lib/supabase'
@@ -42,7 +42,7 @@ export function ProductCard({ product }: ProductCardProps) {
           className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
           onError={(e) => {
             const target = e.target as HTMLImageElement
-            target.src = 'https://images.pexels.com/photos/1199957/pexels-photo-1199957.jpeg'
+            target.src = 'https://images.pexels.com/photos/1199957/pexels-photo-1199957.jpeg?auto=compress&cs=tinysrgb&w=400&h=300'
           }}
         />
       </div>

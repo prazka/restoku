@@ -115,7 +115,7 @@ export default function CheckoutPage() {
                         className="w-12 h-12 object-cover rounded-md"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement
-                          target.src = 'https://images.pexels.com/photos/1199957/pexels-photo-1199957.jpeg'
+                          target.src = 'https://images.pexels.com/photos/1199957/pexels-photo-1199957.jpeg?auto=compress&cs=tinysrgb&w=400&h=300'
                         }}
                       />
                       <div>
