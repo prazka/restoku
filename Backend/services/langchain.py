@@ -121,7 +121,7 @@ async def upload(file: UploadFile = File(...)):
                 detail=f"Failed to forward data: {response.text}"
             )
 
-        return JSONResponse(content=result)
+        return JSONResponse(content=response.json())
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
