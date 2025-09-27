@@ -1,6 +1,7 @@
 "use client"
 
 import { useCartStore } from '@/lib/store'
+import { getImageSrc } from '@/lib/image-utils'
 import { Button } from './button'
 import { X, Minus, Plus, ShoppingBag } from 'lucide-react'
 import { useState } from 'react'
@@ -46,9 +47,13 @@ export function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
                 {items.map((item) => (
                   <div key={item.id} className="flex items-start gap-4 p-4 bg-gray-800 rounded-lg">
                     <img
-                      src={item.image_url}
+                      src={getImageSrc(item.image_url)}
                       alt={item.name}
                       className="w-16 h-16 object-cover rounded-md"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement
+                        target.src = 'https://images.pexels.com/photos/1199957/pexels-photo-1199957.jpeg'
+                      }}
                     />
                     <div className="flex-1 min-w-0">
                       <h3 className="text-white font-medium truncate">{item.name}</h3>
