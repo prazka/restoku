@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { useRouter } from 'next/navigation'
 import { Navigation } from '@/components/ui/navigation'
 import { Footer } from '@/components/ui/footer'
+import { getImageSrc } from '@/lib/image-utils'
 import { ArrowLeft, CreditCard, MapPin, User, Mail } from 'lucide-react'
 import Link from 'next/link'
 
@@ -109,9 +110,13 @@ export default function CheckoutPage() {
                   <div key={item.id} className="flex items-center justify-between py-3 border-b border-gray-700 last:border-0">
                     <div className="flex items-center gap-4">
                       <img
-                        src={item.image_url}
+                        src={getImageSrc(item.image_url)}
                         alt={item.name}
                         className="w-12 h-12 object-cover rounded-md"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement
+                          target.src = 'https://images.pexels.com/photos/1199957/pexels-photo-1199957.jpeg'
+                        }}
                       />
                       <div>
                         <h3 className="text-white font-medium">{item.name}</h3>

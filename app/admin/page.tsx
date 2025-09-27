@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Navigation } from '@/components/ui/navigation'
 import { Upload, Plus, CreditCard as Edit, Trash2, Image as ImageIcon, Wand as Wand2, Loader as Loader2 } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { getImageSrc, convertUrlToBase64, isBase64Image } from '@/lib/image-utils'
 
 export default function AdminPage() {
   const [products, setProducts] = useState<Product[]>([])
@@ -49,6 +50,16 @@ export default function AdminPage() {
   const extractProductInfo = async (imageUrl: string) => {
     setExtracting(true)
     try {
+      // Convert image to base64 if it's a URL
+      let imageData = imageUrl
+      if (!isBase64Image(imageUrl)) {
+        try {
+          imageData = await convertUrlToBase64(imageUrl)
+        } catch (error) {
+          console.warn('Failed to convert to base64, using URL:', error)
+        }
+      }
+      
       // Simulated AI extraction - In real implementation, this would call LangChain
       // For now, we'll use a mock response based on common food items
       const mockExtractions = [
@@ -81,7 +92,7 @@ export default function AdminPage() {
       
       setFormData({
         ...randomExtraction,
-        image_url: imageUrl
+        image_url: imageData
       })
       
       setShowForm(true)
@@ -315,9 +326,13 @@ export default function AdminPage() {
                       <div>
                         <Label className="text-gray-300">Preview</Label>
                         <img
-                          src={formData.image_url}
+                          src={getImageSrc(formData.image_url)}
                           alt="Product preview"
                           className="w-full h-32 object-cover rounded-md border border-gray-600"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement
+                            target.src = 'https://images.pexels.com/photos/1199957/pexels-photo-1199957.jpeg'
+                          }}
                         />
                       </div>
                     )}
@@ -372,9 +387,13 @@ export default function AdminPage() {
                   <Card key={product.id} className="bg-gray-700 border-gray-600">
                     <div className="aspect-w-16 aspect-h-12">
                       <img
-                        src={product.image_url}
+                        src={getImageSrc(product.image_url)}
                         alt={product.name}
                         className="w-full h-48 object-cover rounded-t-lg"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement
+                          target.src = 'https://images.pexels.com/photos/1199957/pexels-photo-1199957.jpeg'
+                        }}
                       />
                     </div>
                     <CardContent className="p-4">

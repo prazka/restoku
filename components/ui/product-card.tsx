@@ -3,6 +3,7 @@
 import { Button } from './button'
 import { Card, CardContent } from './card'
 import { useCartStore } from '@/lib/store'
+import { getImageSrc } from '@/lib/image-utils'
 import { Product } from '@/lib/supabase'
 import { Plus, Minus } from 'lucide-react'
 import { useState } from 'react'
@@ -36,9 +37,13 @@ export function ProductCard({ product }: ProductCardProps) {
     <Card className="group hover:shadow-xl transition-all duration-300 bg-gray-800 border-gray-700 overflow-hidden">
       <div className="aspect-w-16 aspect-h-12 overflow-hidden">
         <img
-          src={product.image_url}
+          src={getImageSrc(product.image_url)}
           alt={product.name}
           className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement
+            target.src = 'https://images.pexels.com/photos/1199957/pexels-photo-1199957.jpeg'
+          }}
         />
       </div>
       <CardContent className="p-6">
