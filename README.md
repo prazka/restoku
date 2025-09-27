@@ -95,10 +95,4 @@ npm run dev
 - **Accent**: Brown (#92400E, #A16207)
 - **Highlight**: Amber (#F59E0B)
 
-## Deployment
 
-The application is configured for static export and can be deployed to:
-- Vercel
-- Netlify  
-- Bolt Hosting
-- Any static hosting service
