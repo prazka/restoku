@@ -33,16 +33,37 @@ export const isBase64Image = (str: string): boolean => {
 }
 
 export const getImageSrc = (imageData: string): string => {
-  // If it's already a URL, return as is
-  if (imageData.startsWith('http') || imageData.startsWith('/')) {
+  // If it's already a valid URL, return as is
+  if (imageData && (imageData.startsWith('http') || imageData.startsWith('https'))) {
     return imageData
   }
   
   // If it's base64, return as is
-  if (isBase64Image(imageData)) {
+  if (imageData && isBase64Image(imageData)) {
+    return imageData
+  }
+  
+  // If it's a relative path, return as is
+  if (imageData && imageData.startsWith('/')) {
     return imageData
   }
   
   // Fallback to placeholder
-  return 'https://images.pexels.com/photos/1199957/pexels-photo-1199957.jpeg'
+  return 'https://images.pexels.com/photos/1199957/pexels-photo-1199957.jpeg?auto=compress&cs=tinysrgb&w=400&h=300'
+}
+
+// Function to create object URL from file
+export const createImagePreview = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      if (e.target?.result) {
+        resolve(e.target.result as string)
+      } else {
+        reject(new Error('Failed to read file'))
+      }
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
 }

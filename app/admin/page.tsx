@@ -10,7 +10,14 @@ import { Textarea } from '@/components/ui/textarea'
 import { Navigation } from '@/components/ui/navigation'
 import { Upload, Plus, CreditCard as Edit, Trash2, Image as ImageIcon, Wand as Wand2, Loader as Loader2 } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { getImageSrc, convertUrlToBase64, isBase64Image } from '@/lib/image-utils'
+import { getImageSrc, createImagePreview } from '@/lib/image-utils'
+
+type ExtractedProduct = {
+  name: string
+  description: string
+  price: number
+  image: string
+}
 
 export default function AdminPage() {
   const [products, setProducts] = useState<Product[]>([])
@@ -19,6 +26,7 @@ export default function AdminPage() {
   const [extracting, setExtracting] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [showForm, setShowForm] = useState(false)
+  const [imagePreview, setImagePreview] = useState<string>('')
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -47,124 +55,126 @@ export default function AdminPage() {
     }
   }
 
-  const extractProductInfo = async (imageUrl: string) => {
+  const extractProductInfo = async (file: File) => {
     setExtracting(true)
     try {
-      // Convert image to base64 if it's a URL
-      let imageData = imageUrl
-      if (!isBase64Image(imageUrl)) {
-        try {
-          imageData = await convertUrlToBase64(imageUrl)
-        } catch (error) {
-          console.warn('Failed to convert to base64, using URL:', error)
-        }
-      }
-      
-      // Simulated AI extraction - In real implementation, this would call LangChain
-      // For now, we'll use a mock response based on common food items
-      const mockExtractions = [
-        {
-          name: "Gourmet Burger",
-          description: "Juicy beef patty with fresh lettuce, tomatoes, and our special sauce on a brioche bun",
-          price: 15.99
-        },
-        {
-          name: "Margherita Pizza",
-          description: "Classic pizza with fresh mozzarella, basil, and tomato sauce on wood-fired crust",
-          price: 18.50
-        },
-        {
-          name: "Caesar Salad",
-          description: "Fresh romaine lettuce with parmesan cheese, croutons, and creamy caesar dressing",
-          price: 12.99
-        },
-        {
-          name: "Grilled Salmon",
-          description: "Fresh Atlantic salmon grilled to perfection with herbs and lemon butter",
-          price: 24.99
-        }
-      ]
-      
-      const randomExtraction = mockExtractions[Math.floor(Math.random() * mockExtractions.length)]
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      setFormData({
-        ...randomExtraction,
-        image_url: imageData
+      // Create FormData for file upload
+      const formData = new FormData()
+      formData.append('file', file)
+
+      // Send to your backend endpoint
+      const response = await fetch('http://127.0.0.1:8000/upload', {
+        method: 'POST',
+        body: formData,
       })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const result: ExtractedProduct = await response.json()
+      
+      // Set form data with extracted information
+      setFormData({
+        name: result.name || '',
+        description: result.description || '',
+        price: result.price || 0,
+        image_url: result.image || ''
+      })
+      
+      // Set image preview
+      if (result.image) {
+        setImagePreview(result.image)
+      }
       
       setShowForm(true)
     } catch (error) {
       console.error('Error extracting product info:', error)
-      alert('Error extracting product information. Please fill in manually.')
-      setFormData({
-        name: '',
-        description: '',
-        price: 0,
-        image_url: imageUrl
-      })
-      setShowForm(true)
+      
+      // Fallback: create preview from uploaded file and show form
+      try {
+        const preview = await createImagePreview(file)
+        setImagePreview(preview)
+        setFormData({
+          name: '',
+          description: '',
+          price: 0,
+          image_url: preview
+        })
+        setShowForm(true)
+        alert('AI extraction failed. Please fill in the product details manually.')
+      } catch (previewError) {
+        console.error('Error creating preview:', previewError)
+        alert('Error processing image. Please try again.')
+      }
     } finally {
       setExtracting(false)
-    }
-  }
-
-  const uploadImage = async (file: File) => {
-    setUploading(true)
-    try {
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${Date.now()}.${fileExt}`
-      const filePath = `products/${fileName}`
-
-      const { error: uploadError } = await supabase.storage
-        .from('product-images')
-        .upload(filePath, file)
-
-      if (uploadError) throw uploadError
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('product-images')
-        .getPublicUrl(filePath)
-
-      // For demo purposes, we'll use a placeholder image service
-      const placeholderUrl = `https://images.pexels.com/photos/${1199957 + Math.floor(Math.random() * 100)}/pexels-photo-${1199957 + Math.floor(Math.random() * 100)}.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&dpr=1`
-      
-      await extractProductInfo(placeholderUrl)
-    } catch (error) {
-      console.error('Error uploading image:', error)
-      alert('Error uploading image. Please try again.')
-    } finally {
-      setUploading(false)
     }
   }
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      uploadImage(file)
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file.')
+        return
+      }
+      
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('File size must be less than 5MB.')
+        return
+      }
+      
+      setUploading(true)
+      extractProductInfo(file)
+      setUploading(false)
     }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!formData.name || !formData.description || !formData.price || !formData.image_url) {
+      alert('Please fill in all fields.')
+      return
+    }
+    
     try {
       if (editingProduct) {
         const { error } = await supabase
           .from('products')
-          .update(formData)
+          .update({
+            name: formData.name,
+            description: formData.description,
+            price: formData.price,
+            image_url: formData.image_url
+          })
           .eq('id', editingProduct.id)
+        
+        if (error) throw error
       } else {
         const { error } = await supabase
           .from('products')
-          .insert(formData)
+          .insert({
+            name: formData.name,
+            description: formData.description,
+            price: formData.price,
+            image_url: formData.image_url
+          })
+        
+        if (error) throw error
       }
 
+      // Reset form
       setFormData({ name: '', description: '', price: 0, image_url: '' })
+      setImagePreview('')
       setEditingProduct(null)
       setShowForm(false)
       fetchProducts()
+      
+      alert(editingProduct ? 'Product updated successfully!' : 'Product added successfully!')
     } catch (error) {
       console.error('Error saving product:', error)
       alert('Error saving product. Please try again.')
@@ -181,6 +191,7 @@ export default function AdminPage() {
         
         if (error) throw error
         fetchProducts()
+        alert('Product deleted successfully!')
       } catch (error) {
         console.error('Error deleting product:', error)
         alert('Error deleting product. Please try again.')
@@ -196,7 +207,15 @@ export default function AdminPage() {
       price: product.price,
       image_url: product.image_url
     })
+    setImagePreview(product.image_url)
     setShowForm(true)
+  }
+
+  const cancelForm = () => {
+    setShowForm(false)
+    setEditingProduct(null)
+    setImagePreview('')
+    setFormData({ name: '', description: '', price: 0, image_url: '' })
   }
 
   return (
@@ -244,6 +263,9 @@ export default function AdminPage() {
                     onChange={handleFileUpload}
                     className="hidden"
                   />
+                  <p className="text-gray-500 text-sm mt-2">
+                    Supported formats: JPG, PNG, GIF (max 5MB)
+                  </p>
                 </div>
               )}
             </div>
@@ -261,7 +283,7 @@ export default function AdminPage() {
                 <Alert className="bg-green-500/10 border-green-500/20">
                   <Wand2 className="h-4 w-4 text-green-500" />
                   <AlertDescription className="text-green-400">
-                    AI has extracted the product information. Review and edit if needed.
+                    {formData.name ? 'AI has extracted the product information. Review and edit if needed.' : 'Please fill in the product details manually.'}
                   </AlertDescription>
                 </Alert>
               )}
@@ -271,7 +293,7 @@ export default function AdminPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <div>
-                      <Label htmlFor="name" className="text-gray-300">Product Name</Label>
+                      <Label htmlFor="name" className="text-gray-300">Product Name *</Label>
                       <Input
                         id="name"
                         value={formData.name}
@@ -283,13 +305,14 @@ export default function AdminPage() {
                     </div>
 
                     <div>
-                      <Label htmlFor="price" className="text-gray-300">Price (Rp)</Label>
+                      <Label htmlFor="price" className="text-gray-300">Price (Rp) *</Label>
                       <Input
                         id="price"
                         type="number"
                         step="0.01"
+                        min="0"
                         value={formData.price}
-                        onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) })}
+                        onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
                         required
                         className="bg-gray-700 border-gray-600 text-white"
                         placeholder="0.00"
@@ -297,21 +320,7 @@ export default function AdminPage() {
                     </div>
 
                     <div>
-                      <Label htmlFor="image_url" className="text-gray-300">Image URL</Label>
-                      <Input
-                        id="image_url"
-                        value={formData.image_url}
-                        onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                        required
-                        className="bg-gray-700 border-gray-600 text-white"
-                        placeholder="https://..."
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="description" className="text-gray-300">Description</Label>
+                      <Label htmlFor="description" className="text-gray-300">Description *</Label>
                       <Textarea
                         id="description"
                         value={formData.description}
@@ -321,21 +330,55 @@ export default function AdminPage() {
                         placeholder="Enter product description"
                       />
                     </div>
+                  </div>
 
-                    {formData.image_url && (
-                      <div>
-                        <Label className="text-gray-300">Preview</Label>
-                        <img
-                          src={getImageSrc(formData.image_url)}
-                          alt="Product preview"
-                          className="w-full h-32 object-cover rounded-md border border-gray-600"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement
-                            target.src = 'https://images.pexels.com/photos/1199957/pexels-photo-1199957.jpeg'
-                          }}
-                        />
-                      </div>
-                    )}
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="text-gray-300">Image Preview</Label>
+                      {imagePreview ? (
+                        <div className="relative">
+                          <img
+                            src={imagePreview}
+                            alt="Product preview"
+                            className="w-full h-48 object-cover rounded-md border border-gray-600"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement
+                              target.src = 'https://images.pexels.com/photos/1199957/pexels-photo-1199957.jpeg?auto=compress&cs=tinysrgb&w=400&h=300'
+                            }}
+                          />
+                          <Button
+                            type="button"
+                            onClick={() => fileInputRef.current?.click()}
+                            className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white p-2"
+                            size="sm"
+                          >
+                            <Upload className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <div 
+                          className="w-full h-48 border-2 border-dashed border-gray-600 rounded-md flex items-center justify-center cursor-pointer hover:border-amber-500 transition-colors"
+                          onClick={() => fileInputRef.current?.click()}
+                        >
+                          <div className="text-center">
+                            <ImageIcon className="h-12 w-12 text-gray-600 mx-auto mb-2" />
+                            <p className="text-gray-400">Click to upload image</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <Label htmlFor="image_url" className="text-gray-300">Image Data</Label>
+                      <Textarea
+                        id="image_url"
+                        value={formData.image_url}
+                        onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                        className="bg-gray-700 border-gray-600 text-white h-20 text-xs"
+                        placeholder="Image URL or base64 data"
+                        readOnly
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -349,11 +392,7 @@ export default function AdminPage() {
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => {
-                      setShowForm(false)
-                      setEditingProduct(null)
-                      setFormData({ name: '', description: '', price: 0, image_url: '' })
-                    }}
+                    onClick={cancelForm}
                     className="border-gray-600 text-gray-300 hover:bg-gray-800"
                   >
                     Cancel
@@ -392,7 +431,7 @@ export default function AdminPage() {
                         className="w-full h-48 object-cover rounded-t-lg"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement
-                          target.src = 'https://images.pexels.com/photos/1199957/pexels-photo-1199957.jpeg'
+                          target.src = 'https://images.pexels.com/photos/1199957/pexels-photo-1199957.jpeg?auto=compress&cs=tinysrgb&w=400&h=300'
                         }}
                       />
                     </div>
@@ -401,7 +440,7 @@ export default function AdminPage() {
                       <p className="text-gray-400 text-sm mb-3 line-clamp-2">{product.description}</p>
                       <div className="flex items-center justify-between">
                         <span className="text-amber-500 font-bold text-lg">
-                          ${product.price.toFixed(2)}
+                          Rp{product.price.toFixed(2)}
                         </span>
                         <div className="flex gap-2">
                           <Button
