@@ -119,7 +119,7 @@ export default function CheckoutPage() {
                       </div>
                     </div>
                     <span className="text-amber-500 font-semibold">
-                      ${(item.price * item.quantity).toFixed(2)}
+                      Rp{(item.price * item.quantity).toFixed(2)}
                     </span>
                   </div>
                 ))}
@@ -128,7 +128,7 @@ export default function CheckoutPage() {
                   <div className="flex justify-between items-center">
                     <span className="text-lg font-semibold text-white">Total:</span>
                     <span className="text-2xl font-bold text-amber-500">
-                      ${getTotalPrice().toFixed(2)}
+                      Rp{getTotalPrice().toFixed(2)}
                     </span>
                   </div>
                 </div>

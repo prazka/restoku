@@ -23,6 +23,7 @@ export type Order = {
   customer_address: string
   items: OrderItem[]
   total_amount: number
+  method: string 
   status: 'pending' | 'confirmed' | 'preparing' | 'delivered'
   created_at: string
 }

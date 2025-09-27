@@ -52,7 +52,7 @@ export function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
                     />
                     <div className="flex-1 min-w-0">
                       <h3 className="text-white font-medium truncate">{item.name}</h3>
-                      <p className="text-gray-400 text-sm mt-1">${item.price.toFixed(2)}</p>
+                      <p className="text-gray-400 text-sm mt-1">Rp{item.price.toFixed(2)}</p>
                       
                       <div className="flex items-center justify-between mt-3">
                         <div className="flex items-center gap-2">
@@ -99,7 +99,7 @@ export function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
               <div className="flex justify-between items-center">
                 <span className="text-lg font-semibold text-white">Total:</span>
                 <span className="text-2xl font-bold text-amber-500">
-                  ${getTotalPrice().toFixed(2)}
+                  Rp{getTotalPrice().toFixed(2)}
                 </span>
               </div>
               

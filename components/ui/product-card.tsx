@@ -48,7 +48,7 @@ export function ProductCard({ product }: ProductCardProps) {
         </div>
         
         <div className="flex items-center justify-between mb-4">
-          <span className="text-2xl font-bold text-amber-500">${product.price.toFixed(2)}</span>
+          <span className="text-2xl font-bold text-amber-500">Rp{product.price.toFixed(2)}</span>
           {currentQuantity > 0 && (
             <span className="text-sm text-gray-400">
               In cart: {currentQuantity}

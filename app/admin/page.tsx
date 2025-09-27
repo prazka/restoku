@@ -272,7 +272,7 @@ export default function AdminPage() {
                     </div>
 
                     <div>
-                      <Label htmlFor="price" className="text-gray-300">Price ($)</Label>
+                      <Label htmlFor="price" className="text-gray-300">Price (Rp)</Label>
                       <Input
                         id="price"
                         type="number"
